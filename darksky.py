@@ -2,8 +2,11 @@ import requests
 import json
 import datetime
 import sqlite3
+import os
 
 request_url = 'https://api.darksky.net/forecast/a4848c6efc250bc969f3cd235a53e9f3/52.449263,5.834519?units=si'
+dbase = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'darksky.sqlite'
+
 try:
     result = requests.get(request_url).json()
     # datetime.datetime.fromtimestamp(result['currently']['time'])
@@ -13,7 +16,7 @@ try:
 except:
     print('data could not be fetched\nprogram will exit')
     exit()
-conn = sqlite3.connect('darksky.sqlite')
+conn = sqlite3.connect(dbase)
 cur = conn.cursor()
 cur.execute('insert into Now (dttim, temp, pressure) values(?, ?, ?)',
             (now_dttim, now_temp, now_pressure))
