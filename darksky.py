@@ -1,10 +1,26 @@
 import requests
 import json
 import datetime
+import sqlite3
 
 request_url = 'https://api.darksky.net/forecast/a4848c6efc250bc969f3cd235a53e9f3/52.449263,5.834519?units=si'
-result = requests.get(request_url).json()
-print(datetime.datetime.fromtimestamp(result['currently']['time']), result['currently']['temperature'],result['currently']['pressure'])
+try:
+    result = requests.get(request_url).json()
+    # datetime.datetime.fromtimestamp(result['currently']['time'])
+    now_dttim = result['currently']['time']
+    now_temp = result['currently']['temperature']
+    now_pressure = result['currently']['pressure']
+except:
+    print('data could not be fetched\nprogram will exit')
+    exit()
+conn = sqlite3.connect('darksky.sqlite')
+cur = conn.cursor()
+cur.execute('insert into Now (dttim, temp, pressure) values(?, ?, ?)',
+            (now_dttim, now_temp, now_pressure))
+cur.execute('select id from Now where dttim = ?', (now_dttim,))
+now_id = cur.fetchone()[0]
 for r in result['hourly']['data']:
-    print(datetime.datetime.fromtimestamp(r['time']), r['temperature'],r['pressure'])
-
+    cur.execute('insert into Expectation (nowId, dttim, temp, pressure) values(?, ?, ?, ?)',
+                (now_id, r['time'], r['temperature'], r['pressure']))
+conn.commit()
+conn.close()
